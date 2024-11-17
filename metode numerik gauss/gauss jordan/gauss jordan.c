@@ -2,9 +2,12 @@
 
 #define MAX 10
 #define MAX_ITER 1000
-#define EPSILON 1e-9  // Toleransi untuk angka sangat kecil dianggap nol
+#define EPSILON 1e-9
 
-// Fungsi untuk menampilkan matriks augmented
+double absolute(double num) {
+    return num < 0 ? -num : num;
+}
+
 void displayMatrix(double mat[MAX][MAX + 1], int n) {
     for (int i = 0; i < n; i++) {
         for (int j = 0; j <= n; j++) {
@@ -15,26 +18,24 @@ void displayMatrix(double mat[MAX][MAX + 1], int n) {
     printf("\n");
 }
 
-// Fungsi untuk melakukan eliminasi Gauss-Jordan
 int gaussJordan(double mat[MAX][MAX + 1], double sol[MAX], int n) {
     int iter = 0;
 
     for (int i = 0; i < n; i++) {
-        // Mencari baris dengan elemen utama terbesar untuk pivot
+        printf("\nLangkah %d:\n", i + 1);
+
         int maxRow = i;
         for (int k = i + 1; k < n; k++) {
-            if (fabs(mat[k][i]) > fabs(mat[maxRow][i])) {
+            if (absolute(mat[k][i]) > absolute(mat[maxRow][i])) {
                 maxRow = k;
             }
         }
 
-        // Jika elemen diagonal adalah nol, mungkin solusi tidak ada atau infinite
-        if (fabs(mat[maxRow][i]) < EPSILON) {
+        if (absolute(mat[maxRow][i]) < EPSILON) {
             printf("Error: Matrix singular atau tidak memiliki solusi unik.\n");
             return -1;
         }
 
-        // Menukar baris
         if (maxRow != i) {
             for (int k = 0; k <= n; k++) {
                 double temp = mat[i][k];
@@ -43,13 +44,11 @@ int gaussJordan(double mat[MAX][MAX + 1], double sol[MAX], int n) {
             }
         }
 
-        // Normalisasi baris i sehingga elemen diagonal menjadi 1
         double pivot = mat[i][i];
         for (int j = 0; j <= n; j++) {
             mat[i][j] /= pivot;
         }
 
-        // Mengurangi elemen pada kolom i untuk baris lain agar menjadi nol
         for (int k = 0; k < n; k++) {
             if (k != i) {
                 double factor = mat[k][i];
@@ -63,14 +62,18 @@ int gaussJordan(double mat[MAX][MAX + 1], double sol[MAX], int n) {
                 return -1;
             }
         }
+
+        displayMatrix(mat, n);
     }
 
-    // Mengisi solusi berdasarkan kolom terakhir
+    printf("\nMatriks setelah eliminasi Gauss-Jordan:\n");
+    displayMatrix(mat, n);
+
     for (int i = 0; i < n; i++) {
         sol[i] = mat[i][n];
     }
 
-    return 0;  // Sukses
+    return 0;
 }
 
 int main() {
@@ -96,7 +99,6 @@ int main() {
     printf("\nMatriks sebelum eliminasi Gauss-Jordan:\n");
     displayMatrix(mat, n);
 
-    // Lakukan eliminasi Gauss-Jordan
     if (gaussJordan(mat, sol, n) == 0) {
         printf("\nSolusi:\n");
         for (int i = 0; i < n; i++) {
