@@ -59,7 +59,7 @@ int gaussElimination(double mat[MAX][MAX + 1], double sol[MAX], int n) {
         displayMatrix(mat, n);
     }
 
-    printf("\nMatriks setelah eliminasi:\n");
+    printf("\nMatriks setelah eliminasi gauss:\n");
     displayMatrix(mat, n);
 
     for (int i = n - 1; i >= 0; i--) {
@@ -97,7 +97,7 @@ int main() {
         }
     }
 
-    printf("\nMatriks sebelum eliminasi:\n");
+    printf("\nMatriks sebelum eliminasi gauss:\n");
     displayMatrix(mat, n);
 
     if (gaussElimination(mat, sol, n) == 0) {

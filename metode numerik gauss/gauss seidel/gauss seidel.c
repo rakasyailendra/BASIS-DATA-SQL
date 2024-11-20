@@ -2,10 +2,10 @@
 
 #define MAX 10
 #define MAX_ITER 1000
-#define EPSILON 1e-9  // Toleransi untuk angka sangat kecil dianggap nol
+#define EPSILON 1e-9
 
 // Fungsi untuk menampilkan matriks augmented
-void displayMatrix(double mat[MAX][MAX + 1], int n) {
+void tampilkanMatriks(double mat[MAX][MAX + 1], int n) {
     for (int i = 0; i < n; i++) {
         for (int j = 0; j <= n; j++) {
             printf("%10.4f ", mat[i][j]);
@@ -15,63 +15,195 @@ void displayMatrix(double mat[MAX][MAX + 1], int n) {
     printf("\n");
 }
 
-// Fungsi Gauss-Seidel untuk mencari solusi
-int gaussSeidel(double mat[MAX][MAX + 1], double sol[MAX], int n) {
-    double oldSol[MAX];
+// Fungsi untuk metode Eliminasi Gauss
+int eliminasiGauss(double mat[MAX][MAX + 1], double sol[MAX], int n) {
     int iter = 0;
 
-    // Inisialisasi solusi awal
     for (int i = 0; i < n; i++) {
-        sol[i] = 0.0;
-    }
+        printf("\nLangkah %d:\n", i + 1);
 
-    // Iterasi Gauss-Seidel
-    printf("\nMatriks sebelum iterasi:\n");
-    displayMatrix(mat, n);
-
-    for (iter = 1; iter <= MAX_ITER; iter++) {
-        int converged = 1;
-
-        for (int i = 0; i < n; i++) {
-            oldSol[i] = sol[i];
-            double sum = mat[i][n];
-
-            for (int j = 0; j < n; j++) {
-                if (i != j) {
-                    sum -= mat[i][j] * sol[j];
-                }
-            }
-
-            sol[i] = sum / mat[i][i];
-
-            // Mengecek apakah sudah konvergen
-            if (converged && fabs(sol[i] - oldSol[i]) > EPSILON) {
-                converged = 0;
+        int barisMaks = i;
+        for (int k = i + 1; k < n; k++) {
+            if (fabs(mat[k][i]) > fabs(mat[barisMaks][i])) {
+                barisMaks = k;
             }
         }
 
-        // Menampilkan solusi sementara pada setiap iterasi
+        if (fabs(mat[barisMaks][i]) < EPSILON) {
+            printf("Error: Matriks singular atau tidak memiliki solusi unik.\n");
+            return -1;
+        }
+
+        if (barisMaks != i) {
+            for (int k = i; k <= n; k++) {
+                double temp = mat[i][k];
+                mat[i][k] = mat[barisMaks][k];
+                mat[barisMaks][k] = temp;
+            }
+        }
+
+        for (int k = i + 1; k < n; k++) {
+            double faktor = mat[k][i] / mat[i][i];
+            for (int j = i; j <= n; j++) {
+                mat[k][j] -= faktor * mat[i][j];
+            }
+            iter++;
+            if (iter > MAX_ITER) {
+                printf("Error: Iterasi melebihi batas maksimal.\n");
+                return -1;
+            }
+        }
+
+        tampilkanMatriks(mat, n);
+    }
+
+    printf("\nMatriks setelah Eliminasi Gauss:\n");
+    tampilkanMatriks(mat, n);
+
+    for (int i = n - 1; i >= 0; i--) {
+        sol[i] = mat[i][n] / mat[i][i];
+        for (int j = i - 1; j >= 0; j--) {
+            mat[j][n] -= mat[j][i] * sol[i];
+            iter++;
+            if (iter > MAX_ITER) {
+                printf("Error: Iterasi melebihi batas maksimal.\n");
+                return -1;
+            }
+        }
+    }
+
+    return 0;
+}
+
+// Fungsi untuk metode Gauss-Jordan
+int gaussJordan(double mat[MAX][MAX + 1], double sol[MAX], int n) {
+    int iter = 0;
+
+    for (int i = 0; i < n; i++) {
+        printf("\nLangkah %d:\n", i + 1);
+
+        int barisMaks = i;
+        for (int k = i + 1; k < n; k++) {
+            if (fabs(mat[k][i]) > fabs(mat[barisMaks][i])) {
+                barisMaks = k;
+            }
+        }
+
+        if (fabs(mat[barisMaks][i]) < EPSILON) {
+            printf("Error: Matriks singular atau tidak memiliki solusi unik.\n");
+            return -1;
+        }
+
+        if (barisMaks != i) {
+            for (int k = 0; k <= n; k++) {
+                double temp = mat[i][k];
+                mat[i][k] = mat[barisMaks][k];
+                mat[barisMaks][k] = temp;
+            }
+        }
+
+        double pivot = mat[i][i];
+        for (int j = 0; j <= n; j++) {
+            mat[i][j] /= pivot;
+        }
+
+        for (int k = 0; k < n; k++) {
+            if (k != i) {
+                double faktor = mat[k][i];
+                for (int j = 0; j <= n; j++) {
+                    mat[k][j] -= faktor * mat[i][j];
+                }
+            }
+            iter++;
+            if (iter > MAX_ITER) {
+                printf("Error: Iterasi melebihi batas maksimal.\n");
+                return -1;
+            }
+        }
+
+        tampilkanMatriks(mat, n);
+    }
+
+    printf("\nMatriks setelah Gauss-Jordan:\n");
+    tampilkanMatriks(mat, n);
+
+    for (int i = 0; i < n; i++) {
+        sol[i] = mat[i][n];
+    }
+
+    return 0;
+}
+
+// Fungsi untuk metode Gauss-Seidel
+int gaussSeidel(double mat[MAX][MAX + 1], double sol[MAX], int n) {
+    double solLama[MAX];
+    int iter = 0;
+
+    printf("\nMasukkan tebakan awal untuk solusi:\n");
+    for (int i = 0; i < n; i++) {
+        printf("x[%d]: ", i);
+        scanf("%lf", &sol[i]);
+    }
+
+    printf("\nTebakan awal solusi:\n");
+    for (int i = 0; i < n; i++) {
+        printf("x[%d] = %10.4f ", i, sol[i]);
+    }
+    printf("\n");
+
+    printf("\nMatriks sebelum iterasi:\n");
+    tampilkanMatriks(mat, n);
+
+    for (iter = 1; iter <= MAX_ITER; iter++) {
+        int konvergen = 1;
+
+        for (int i = 0; i < n; i++) {
+            solLama[i] = sol[i];
+        }
+
+        for (int i = 0; i < n; i++) {
+            double jumlah = mat[i][n];
+
+            for (int j = 0; j < n; j++) {
+                if (i != j) {
+                    jumlah -= mat[i][j] * sol[j];
+                }
+            }
+
+            sol[i] = jumlah / mat[i][i];
+
+            if (konvergen && (fabs(sol[i] - solLama[i]) > EPSILON)) {
+                konvergen = 0;
+            }
+        }
+
         printf("Iterasi %d: ", iter);
         for (int i = 0; i < n; i++) {
             printf("x[%d] = %10.4f ", i, sol[i]);
         }
         printf("\n");
 
-        // Jika sudah konvergen
-        if (converged) {
+        if (konvergen) {
             printf("\nSolusi konvergen tercapai setelah %d iterasi.\n", iter);
             return 0;
         }
     }
 
-    // Jika iterasi maksimum tercapai tanpa konvergensi
     printf("Error: Iterasi melebihi batas maksimal.\n");
     return -1;
 }
 
 int main() {
-    int n;
+    int n, metode;
     double mat[MAX][MAX + 1], sol[MAX];
+
+    // Pengguna memilih metode
+    printf("Pilih metode yang ingin digunakan:\n");
+    printf("1. Eliminasi Gauss\n");
+    printf("2. Gauss-Jordan\n");
+    printf("3. Gauss-Seidel\n");
+    printf("Masukkan pilihan (1, 2, atau 3): ");
+    scanf("%d", &metode);
 
     printf("Masukkan ukuran matriks (n x n): ");
     scanf("%d", &n);
@@ -81,7 +213,7 @@ int main() {
         return -1;
     }
 
-    printf("Masukkan elemen matriks augmented:\n");
+    printf("Masukkan elemen-elemen matriks augmented:\n");
     for (int i = 0; i < n; i++) {
         for (int j = 0; j <= n; j++) {
             printf("mat[%d][%d]: ", i, j);
@@ -89,17 +221,38 @@ int main() {
         }
     }
 
-    printf("\nMatriks sebelum eliminasi:\n");
-    displayMatrix(mat, n);
+    printf("\nMatriks augmented (A|B):\n");
+    tampilkanMatriks(mat, n);
 
-    // Melakukan iterasi Gauss-Seidel
-    if (gaussSeidel(mat, sol, n) == 0) {
-        printf("\nSolusi akhir:\n");
-        for (int i = 0; i < n; i++) {
-            printf("x[%d] = %10.4f\n", i, sol[i]);
+    if (metode == 1) {
+        if (eliminasiGauss(mat, sol, n) == 0) {
+            printf("\nSolusi:\n");
+            for (int i = 0; i < n; i++) {
+                printf("x[%d] = %10.4f\n", i, sol[i]);
+            }
+        } else {
+            printf("Eliminasi Gauss gagal.\n");
+        }
+    } else if (metode == 2) {
+        if (gaussJordan(mat, sol, n) == 0) {
+            printf("\nSolusi:\n");
+            for (int i = 0; i < n; i++) {
+                printf("x[%d] = %10.4f\n", i, sol[i]);
+            }
+        } else {
+            printf("Gauss-Jordan gagal.\n");
+        }
+    } else if (metode == 3) {
+        if (gaussSeidel(mat, sol, n) == 0) {
+            printf("\nSolusi:\n");
+            for (int i = 0; i < n; i++) {
+                printf("x[%d] = %10.4f\n", i, sol[i]);
+            }
+        } else {
+            printf("Gauss-Seidel gagal.\n");
         }
     } else {
-        printf("Proses iterasi gagal.\n");
+        printf("Pilihan metode tidak valid.\n");
     }
 
     return 0;
